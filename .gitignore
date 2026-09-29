@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+.deploy/
+.local-data/
+migration-review/
+
+# Local credentials and OAuth downloads. Store the Google secret in AWS Secrets Manager.
+.secrets/
+*.secret
+google-client-secret*
+client_secret*.json

@@ -1,0 +1,16 @@
+.git
+.idea
+.env
+.env.*
+.secrets
+.deploy
+*.secret
+google-client-secret*
+client_secret*.json
+node_modules
+dist
+README.md
+template.yml
+docs
+api/dist
+*.log

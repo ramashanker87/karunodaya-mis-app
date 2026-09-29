@@ -1,0 +1,56 @@
+services:
+  dynamodb:
+    image: amazon/dynamodb-local:latest
+    command: ["-jar", "DynamoDBLocal.jar", "-sharedDb", "-inMemory"]
+    ports:
+      - "8000:8000"
+  seed:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    command: ["sh", "-c", "until node -e 'fetch(\"http://dynamodb:8000\").then(() => process.exit(0)).catch(() => process.exit(1))'; do sleep 1; done; npm run seed"]
+    environment:
+      AWS_REGION: us-east-1
+      DYNAMODB_ENDPOINT: http://dynamodb:8000
+    depends_on:
+      - dynamodb
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    command: npm run dev:api
+    environment:
+      NODE_ENV: development
+      DEV_MOCK_AUTH: "true"
+      AWS_REGION: us-east-1
+      DYNAMODB_ENDPOINT: http://dynamodb:8000
+      OPERATIONS_TABLE: karunodaya-local-operations
+      STUDENTS_TABLE: karunodaya-local-students
+      AUDIT_TABLE: karunodaya-local-audit
+      ACCESS_TABLE: karunodaya-local-access
+      PORT: "3000"
+    volumes:
+      - ./api:/app/api
+      - ./shared:/app/shared
+    ports:
+      - "3000:3000"
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    environment:
+      VITE_DEV_MOCK_AUTH: "true"
+      VITE_DEV_USER_SUB: dev_admin
+      API_PROXY_TARGET: http://api:3000
+    volumes:
+      - ./src:/app/src
+      - ./shared:/app/shared
+      - ./index.html:/app/index.html
+      - ./vite.config.ts:/app/vite.config.ts
+    ports:
+      - "5173:5173"
+    depends_on:
+      - api
