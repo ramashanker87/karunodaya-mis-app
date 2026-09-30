@@ -496,6 +496,9 @@ Resources:
                   - !GetAtt IdentityAccessTable.Arn
                   - !Sub '${IdentityAccessTable.Arn}/index/*'
               - Effect: Allow
+                Action: cognito-idp:ListUsers
+                Resource: !GetAtt UserPool.Arn
+              - Effect: Allow
                 Action:
                   - s3:GetObject
                   - s3:PutObject

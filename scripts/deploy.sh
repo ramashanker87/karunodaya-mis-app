@@ -4,7 +4,7 @@ set -euo pipefail
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 phase="${1:-}"
 profile="${DEPLOY_AWS_PROFILE:-mis}"
-region="${DEPLOY_AWS_REGION:-us-east-1}"
+region="${DEPLOY_AWS_REGION:-ap-south-1}"
 stack="${DEPLOY_STACK_NAME:-karunodaya-mis-v2}"
 
 if [[ "$phase" != bootstrap && "$phase" != publish ]]; then

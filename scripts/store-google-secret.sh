@@ -3,7 +3,7 @@ set +x
 set -euo pipefail
 
 profile="${DEPLOY_AWS_PROFILE:-mis}"
-region="${DEPLOY_AWS_REGION:-us-east-1}"
+region="${DEPLOY_AWS_REGION:-ap-south-1}"
 secret_name="${GOOGLE_SECRET_NAME:-karunodaya/mis/google-oauth}"
 expected_account="${DEPLOY_EXPECTED_ACCOUNT:-376015725430}"
 

@@ -1,3 +1,4 @@
+import { CognitoIdentityProviderClient, ListUsersCommand } from '@aws-sdk/client-cognito-identity-provider';
 import type { FastifyInstance } from 'fastify';
 import { GetCommand } from '@aws-sdk/lib-dynamodb';
 import { z } from 'zod';
@@ -6,11 +7,26 @@ import { accessChangeSchema } from '../../../shared/schema.js';
 import { changeAccess, pendingUsers, requireRole, type AccessProfile } from './access.js';
 
 export function registerIdentityRoutes(app: FastifyInstance, { db, config }: Context) {
+  const cognito = new CognitoIdentityProviderClient({ region: config.region });
+  app.addHook('onClose', async () => { cognito.destroy(); });
+
   app.get('/api/me', async (request) => ({ sub: request.identity.sub, status: request.access.status, role: request.access.role ?? null, programIds: request.access.programIds, staffId: request.access.staffId ?? null }));
 
   app.get('/api/admin/users/pending', async (request) => {
     requireRole(request.access, 'admin');
-    return { items: await pendingUsers(db, config) };
+    const pending = await pendingUsers(db, config);
+    const items = [];
+    for (const user of pending) {
+      // Resolve current attributes by stable subject, including requests predating this feature.
+      const result = config.mockAuth ? undefined : await cognito.send(new ListUsersCommand({
+        UserPoolId: config.cognitoPoolId,
+        Filter: `sub = ${JSON.stringify(user.sub)}`,
+      }));
+      const attributes = result?.Users?.find((entry) => entry.Attributes?.some((a) => a.Name === 'sub' && a.Value === user.sub))?.Attributes;
+      const attribute = (name: string) => attributes?.find((entry) => entry.Name === name)?.Value ?? null;
+      items.push({ sub: user.sub, createdAt: user.createdAt, email: attribute('email'), name: attribute('name') });
+    }
+    return { items };
   });
 
   app.get('/api/admin/users/:sub/access', async (request, reply) => {

@@ -2,7 +2,7 @@ import { createRemoteJWKSet, jwtVerify } from 'jose';
 import type { FastifyRequest } from 'fastify';
 import type { Config } from '../config.js';
 
-export interface Identity { sub: string; email?: string }
+export interface Identity { sub: string }
 
 export function createVerifier(config: Config) {
   const issuer = `https://cognito-idp.${config.region}.amazonaws.com/${config.cognitoPoolId}`;
@@ -24,6 +24,6 @@ export function createVerifier(config: Config) {
     if (payload.token_use !== 'access' || payload.client_id !== config.cognitoClientId || typeof payload.sub !== 'string') {
       throw new Error('Invalid Cognito access token');
     }
-    return { sub: payload.sub, email: typeof payload.username === 'string' ? payload.username : undefined };
+    return { sub: payload.sub };
   };
 }
